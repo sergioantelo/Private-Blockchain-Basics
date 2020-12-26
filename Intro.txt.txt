@@ -1,0 +1,16 @@
+You only need actually the run_app.py, node_server.py and the templates folder.
+
+Starting blockchain nodes:
+- python node_server.py <port> (the <> does not have to be written)
+
+Starting website:
+- python run_app.py <port_of_blockchain_node_for_SYNC> <port_where_to_host_website>
+
+Registering a node with another node:
+- curl -X POST -d "{\"node_address\":\"http://127.0.0.1:8000\"}" -H "Content-Type:application/json" http://127.0.0.1:8001/register_with
+  after this 8001 appears in the peers list of 8000 and 8000 in the peers list of 8001
+  8001 will copy the chain of 8000
+
+How to build the network ?
+How to propagate transactions/mined blocks?
+Which nodes receive a mining request ?
