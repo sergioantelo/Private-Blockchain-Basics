@@ -251,7 +251,7 @@ def register_with_existing_node():
         # update chain and the peers
         chain_dump = response.json()['chain']
         blockchain = create_chain_from_dump(chain_dump)
-        peers.update(response.json()['peers'])
+        # peers.update(response.json()['peers'])
         ############
         #FELIX
         ############
