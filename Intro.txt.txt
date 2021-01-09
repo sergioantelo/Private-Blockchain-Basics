@@ -11,6 +11,6 @@ Registering a node with another node:
   after this 8001 appears in the peers list of 8000 and 8000 in the peers list of 8001
   8001 will copy the chain of 8000
 
-How to build the network ?
+How to build the network?
 How to propagate transactions/mined blocks?
-Which nodes receive a mining request ?
+Which nodes receive a mining request?

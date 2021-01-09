@@ -54,10 +54,13 @@ class Blockchain:
           in the chain match.
         """
         previous_hash = self.last_block.hash
+        
+        if previous_hash == proof:
+            return "Block already added"
 
         if previous_hash != block.previous_hash:
             return False
-
+            
         if not Blockchain.is_valid_proof(block, proof):
             return False
 
@@ -294,8 +297,13 @@ def verify_and_add_block():
     proof = block_data['hash']
     added = blockchain.add_block(block, proof)
 
+    if added == "Block already added":
+        return "The block was already added", 201
+
     if not added:
         return "The block was discarded by the node", 400
+
+    announce_new_block(block)
 
     return "Block added to the chain", 201
 
@@ -330,11 +338,10 @@ def consensus():
 
     return False
 
-
 def announce_new_block(block):
     """
     A function to announce to the network once a block has been mined.
-    Other blocks can simply verify the proof of work and add it to their
+    Other nodes can simply verify the proof of work and add it to their
     respective chains.
     """
     for peer in peers:
