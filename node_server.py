@@ -298,13 +298,15 @@ def register_with_existing_node():
     '''
 
     for peer in peers_list:
+        if peer in peers:
+            continue
         print(peer)
         response = requests.post(peer + "/register_node",
                                  data=json.dumps(data), headers=headers)
         if response.status_code==200:
             peers.add(peer)
 
-    consensus()
+    found_longest_chain = consensus()
     
     '''       
     if response.status_code == 200:
@@ -325,8 +327,10 @@ def register_with_existing_node():
         # if something goes wrong, pass it on to the API response
         return response.content, response.status_code
     '''
-
-    return "Registration successful", 200
+    if found_longest_chain:
+        return "Registration successful", 200
+    else:
+        return "Already  head longest chain" # actually this should never be called for a newly added node
 
 def create_chain_from_dump(chain_dump):
     generated_blockchain = Blockchain()
@@ -338,7 +342,8 @@ def create_chain_from_dump(chain_dump):
                       block_data["transactions"],
                       block_data["timestamp"],
                       block_data["previous_hash"],
-                      block_data["nonce"])
+                      block_data["nonce"],
+                      block_data["miner"])
         proof = block_data['hash']
         added = generated_blockchain.add_block(block, proof)
         if not added:
@@ -356,7 +361,8 @@ def verify_and_add_block():
                   block_data["transactions"],
                   block_data["timestamp"],
                   block_data["previous_hash"],
-                  block_data["nonce"])
+                  block_data["nonce"],
+                  block_data["miner"])
 
     proof = block_data['hash']
     added = blockchain.add_block(block, proof)
@@ -384,6 +390,7 @@ def consensus():
     found, our chain is replaced with it.
     """
     global blockchain
+    global peers
 
     longest_chain = None
     current_len = len(blockchain.chain)
@@ -392,7 +399,18 @@ def consensus():
         response = requests.get('{}/chain'.format(node))
         length = response.json()['length']
         chain = response.json()['chain']
-        if length > current_len and blockchain.check_chain_validity(chain):
+
+        print("Length:",length)
+        print("Current Length:", current_len)
+        chain = create_chain_from_dump(chain)
+        # if creat_chain_from_dump returns something, then the chain was also correct in itself
+        # so now only check lengths
+        '''
+        if length > current_len and blockchain.check_chain_validity(chain.chain):
+            current_len = length
+            longest_chain = chain
+        '''
+        if len(chain.chain) > current_len:
             current_len = length
             longest_chain = chain
 
