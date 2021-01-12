@@ -25,7 +25,7 @@ class Block:
 
 class Blockchain:
     # difficulty of our PoW algorithm
-    difficulty = 10
+    difficulty = 2
 
     def __init__(self):
         self.unconfirmed_transactions = []
@@ -137,7 +137,7 @@ class Blockchain:
                           transactions=self.unconfirmed_transactions,
                           timestamp=time.time(),
                           previous_hash=last_block.hash,
-                          miner = request.host_url())
+                          miner = request.host_url)
 
         proof = self.proof_of_work(new_block)
 
@@ -156,8 +156,6 @@ blockchain.create_genesis_block()
 
 # the address to other participating members of the network
 peers = set()
-
-
 
 # endpoint to submit a new transaction. This will be used by
 # our application to add new data (posts) to the blockchain
@@ -300,13 +298,13 @@ def register_with_existing_node():
     '''
 
     for peer in peers_list:
+        print(peer)
         response = requests.post(peer + "/register_node",
                                  data=json.dumps(data), headers=headers)
         if response.status_code==200:
             peers.add(peer)
 
     consensus()
-    
     
     '''       
     if response.status_code == 200:
@@ -315,12 +313,7 @@ def register_with_existing_node():
         # update chain and the peers
         chain_dump = response.json()['chain']
         blockchain = create_chain_from_dump(chain_dump)
-<<<<<<< HEAD
         # peers.update(response.json()['peers'])
-=======
-        #peers.update(response.json()['peers'])
-
->>>>>>> e754c0f38767760f9d8e1bd7332d0340b4a7a4e8
         ############
         #FELIX
         ############
@@ -396,7 +389,7 @@ def consensus():
     current_len = len(blockchain.chain)
 
     for node in peers:
-        response = requests.get('{}chain'.format(node))
+        response = requests.get('{}/chain'.format(node))
         length = response.json()['length']
         chain = response.json()['chain']
         if length > current_len and blockchain.check_chain_validity(chain):

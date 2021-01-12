@@ -20,6 +20,7 @@ localhost = "http://127.0.0.1:"
 NODE_ADDRESS_list = []
 CONNECTED_NODE_ADDRESS = ""
 posts = []
+txs = []
   
 pool_of_unmined_txs = []
 
@@ -35,23 +36,31 @@ def fetch_posts():
         content = []
         chain = json.loads(response.content)
         for block in chain["chain"]:
-            for tx in block["transactions"]:
-                tx["index"] = block["index"]
-                tx["hash"] = block["previous_hash"]
-                content.append(tx)
+            #for tx in block["transactions"]:
+                #tx["index"] = block["index"]
+                #tx["hash"] = block["previous_hash"]
+            content.append(block)
 
         global posts
         posts = sorted(content, key=lambda k: k['timestamp'],
                        reverse=True)
 
+def fetch_pending_txs():
+    """
+    Function to fetch the chain from a blockchain node, parse the
+    data and store it locally.
+    """
+    global txs
+    txs = pool_of_unmined_txs
 
 @app.route('/')
 def index():
     fetch_posts()
+    fetch_pending_txs()
     return render_template('index.html',
-                           title='YourNet: Decentralized '
-                                 'content sharing',
+                           title='LMU University: Decentralized Certificates Storage',
                            posts=posts,
+                           txs=txs,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string)
 
@@ -78,36 +87,36 @@ def submit_textarea():
     pool_of_unmined_txs.append(transaction)
 
     # Submit a transaction
-    # new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
+    #new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
 
     #requests.post(new_tx_address,
-    #              json=post_object,
-    #              headers={'Content-type': 'application/json'})
+                  #json=transaction,
+                  #headers={'Content-type': 'application/json'})
 
     return redirect('/')
 
 
-@app.route('/mine')
+@app.route('/mine_app')
 def start_mining():
     """
     Endpoint to simulate mining in network.
     """
     select_rnd_node = random.choice(NODE_ADDRESS_list)
 
+    address = "{}/new_transaction".format(select_rnd_node)
+    global pool_of_unmined_txs
     for tx in pool_of_unmined_txs:
-        address = "{}/new_transaction".format(select_rnd_node)
         requests.post(address,
-                      json=json.dumps(tx),
+                      json=tx,
                       headers={'Content-type': 'application/json'})
     
     address = "{}/mine".format(select_rnd_node)
-    requests.post(address,
-                json=json.dumps(tx),
-                headers={'Content-type': 'application/json'})
+    response = requests.get(address)
 
-    return redirect('/')
+    if response.status_code == 200:
+        pool_of_unmined_txs = []
 
-
+    return response.text
 
 def timestamp_to_string(epoch_time):
     return datetime.datetime.fromtimestamp(epoch_time).strftime('%H:%M')
@@ -124,4 +133,7 @@ if __name__=="__main__":
 
     CONNECTED_NODE_ADDRESS = NODE_ADDRESS_list[0]
 
+    print(CONNECTED_NODE_ADDRESS)
+
     app.run(debug=True,port=host_node)
+

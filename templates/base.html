@@ -1,10 +1,7 @@
 <html>
-  <head>
-    <title>{{ title }}</title>
-  </head>
   <body>
-    <div><a href="/index">Home</a></div>
-    <center><h1>{{ title }}</h1></center>
+    <div><a href="/index"></a></div>
+    <center><h1>LMU University: Decentralized Certificate's Storage</h1></center>
     <hr>
     {% with messages = get_flashed_messages() %}
     {% if messages %}
@@ -16,5 +13,6 @@
     {% endif %}
     {% endwith %}
     {% block content %}{% endblock %}
+    <!---{% block blockchain %}{% endblock %}--->
   </body>
 </html>
