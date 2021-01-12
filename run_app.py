@@ -3,6 +3,9 @@ import requests
 import datetime
 import json
 import sys
+import time
+from hashlib import sha256
+import random
 
 ##########
 #FELIX
@@ -13,10 +16,14 @@ import sys
 
 
 app = Flask(__name__)
+localhost = "http://127.0.0.1:"
+NODE_ADDRESS_list = []
 CONNECTED_NODE_ADDRESS = ""
 posts = []
-    
   
+pool_of_unmined_txs = []
+
+
 def fetch_posts():
     """
     Function to fetch the chain from a blockchain node, parse the
@@ -56,30 +63,65 @@ def submit_textarea():
     """
     post_content = request.form["content"]
     author = request.form["author"]
+    # FELIX
+    timestamp = time.time()
+    
+    tx_hash = sha256(post_content.encode()).hexdigest()
 
-    post_object = {
+    transaction = {
         'author': author,
         'content': post_content,
+        'timestamp': timestamp,
+        'hash': tx_hash
     }
 
-    # Submit a transaction
-    new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
+    pool_of_unmined_txs.append(transaction)
 
-    requests.post(new_tx_address,
-                  json=post_object,
-                  headers={'Content-type': 'application/json'})
+    # Submit a transaction
+    # new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
+
+    #requests.post(new_tx_address,
+    #              json=post_object,
+    #              headers={'Content-type': 'application/json'})
 
     return redirect('/')
+
+
+@app.route('/mine')
+def start_mining():
+    """
+    Endpoint to simulate mining in network.
+    """
+    select_rnd_node = random.choice(NODE_ADDRESS_list)
+
+    for tx in pool_of_unmined_txs:
+        address = "{}/new_transaction".format(select_rnd_node)
+        requests.post(address,
+                      json=json.dumps(tx),
+                      headers={'Content-type': 'application/json'})
+    
+    address = "{}/mine".format(select_rnd_node)
+    requests.post(address,
+                json=json.dumps(tx),
+                headers={'Content-type': 'application/json'})
+
+    return redirect('/')
+
 
 
 def timestamp_to_string(epoch_time):
     return datetime.datetime.fromtimestamp(epoch_time).strftime('%H:%M')
 
 ##########
-#FELIX
+# FELIX
 ##########
 if __name__=="__main__":
-    blockchain_node = sys.argv[1]
-    host_node = sys.argv[2]
-    CONNECTED_NODE_ADDRESS = "http://127.0.0.1:"+blockchain_node
+    host_node = sys.argv[1]
+    
+    blockchain_nodes = sys.argv[2:]
+    for node in blockchain_nodes:
+        NODE_ADDRESS_list.append(localhost+node)
+
+    CONNECTED_NODE_ADDRESS = NODE_ADDRESS_list[0]
+
     app.run(debug=True,port=host_node)
