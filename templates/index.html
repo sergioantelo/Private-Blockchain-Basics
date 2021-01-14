@@ -41,24 +41,18 @@
 		</form>
 	</div>
 
-	<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+	<br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
-	<div style="margin: 20px;">
-
-	<div class='pending_txs'>
-		<center><h3>Pending Transactions</h3></center>
+	<div class='blockchain'>
+		<center><h3>Pending Txs</h3></center>
 		{% for tx in txs %}
-		<div class="post_box-body">
+		<div class="post_box">
 			<p>Author: {{tx.author}}</p>
 			<p>Timestamp: <i>{{readable_time(tx.timestamp)}}</i></p>
 			<p>Content: {{tx.content}}</p>
 		</div>
 		{% endfor %}
-	</div>
-
-	<br>
-
-	<div class='blockchain'>
+		
 		<center><h3>Blockchain</h3></center>
 		{% for post in posts[::-1] %}
 		<div class="post_box">
@@ -80,18 +74,15 @@
 		</div>
 		{% endfor %}
 	</div>
+	</div>
 
 	<style>
 		.blockchain {
 		    background: #fff;
 		    padding: 12px 0px 0px 12px;
 			border-style: groove;
-		}
-
-		.pending_txs {
-		    background: #fff;
-		    padding: 12px 0px 0px 12px;
-			border-style: groove;
+			float: left;
+			margin-left: 40px;
 		}
 
 		.alignleft {
@@ -174,7 +165,7 @@
 		    height: 42px;
 		}
 	</style>
-    </div>
+
 {% endblock %}
 
 <!---

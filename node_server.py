@@ -32,6 +32,9 @@ class Blockchain:
         self.unconfirmed_transactions = []
         self.chain = []
 
+    def set_difficulty(self,diff):
+        Blockchain.difficulty = diff
+
     def create_genesis_block(self):
         """
         A function to generate genesis block and appends it to
@@ -61,7 +64,7 @@ class Blockchain:
             return (False,"Block already added")
 
         if previous_hash != block.previous_hash:
-            return (False, "previous hash not correct")
+            return (False, "Previous hash not correct")
 
         block_validity = Blockchain.is_valid_proof(block,proof)
         '''
@@ -108,12 +111,12 @@ class Blockchain:
         """
 
         if not block_hash == block.compute_hash():
-            return (False, "hash not correct")
+            return (False, "Hash not correct")
 
         if not block_hash.startswith('0' * Blockchain.difficulty):
-            return (False, "required difficulty not fullfilled")
+            return (False, "Required difficulty not fullfilled")
         
-        return (True, "proof correct")
+        return (True, "Proof correct")
         #return (block_hash.startswith('0' * Blockchain.difficulty) and
         #        block_hash == block.compute_hash())
 
@@ -354,27 +357,6 @@ def register_with_existing_node():
     else:        
         return "Registration succesful. No longer chain found among peers"
         
-def create_chain_from_dump(chain_dump):
-    generated_blockchain = Blockchain()
-    generated_blockchain.create_genesis_block()
-    for idx, block_data in enumerate(chain_dump):
-        if idx == 0:
-            continue  # skip genesis block
-        block = Block(block_data["index"],
-                      block_data["transactions"],
-                      block_data["timestamp"],
-                      block_data["previous_hash"],
-                      block_data["nonce"],
-                      block_data["miner"])
-        proof = block_data['hash']
-        added = generated_blockchain.add_block(block, proof)
-        if not added[0]:
-            # added[0] if the added block was added or not
-            # added[1] what was the error
-            return (added[0],added[1], block.index)
-    return (True, generated_blockchain)
-
-
 # endpoint to add a block mined by someone else to
 # the node's chain. The block is first verified by the node
 # and then added to the chain.
@@ -392,10 +374,8 @@ def verify_and_add_block():
     added = blockchain.add_block(block, proof)
     # added[0] whether block was added
     # added[1] message
-    print(added)
 
     if added[1] == "Block already added":
-        print("PETER PAN")
         return json.dumps({"status":added[0],"message":added[1]})
 
    #if not added:
@@ -411,7 +391,6 @@ def verify_and_add_block():
     #return "Block added to the chain", 201
 
     return json.dumps({"status":added[0],"message":added[1]})
-
 
 # endpoint to query unconfirmed transactions
 @app.route('/pending_tx')
@@ -505,6 +484,33 @@ def attack():
         # of the proofing alogorithms is not working
         return "Security mechanism is not working"
 
+@app.route('/modify_difficulty')
+def modify_difficulty(self,diff):
+    '''
+    Set a different difficulty
+    '''
+    blockchain.set_difficulty(diff)
+
+def create_chain_from_dump(chain_dump):
+    generated_blockchain = Blockchain()
+    generated_blockchain.create_genesis_block()
+    for idx, block_data in enumerate(chain_dump):
+        if idx == 0:
+            continue  # skip genesis block
+        block = Block(block_data["index"],
+                      block_data["transactions"],
+                      block_data["timestamp"],
+                      block_data["previous_hash"],
+                      block_data["nonce"],
+                      block_data["miner"])
+        proof = block_data['hash']
+        added = generated_blockchain.add_block(block, proof)
+        if not added[0]:
+            # added[0] if the added block was added or not
+            # added[1] what was the error
+            return (added[0],added[1], block.index)
+    return (True, generated_blockchain)
+
 def consensus():
     """
     Our naive consnsus algorithm. If a longer valid chain is
@@ -573,6 +579,7 @@ def announce_new_block(block):
         if not r["status"]:
             return r
     
+    print(responses)
     return responses[0]
 
 
