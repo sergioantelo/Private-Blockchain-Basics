@@ -268,7 +268,9 @@ def mine_unconfirmed_transactions():
             # announce the recently mined block to the network
             announce_new_block(blockchain.last_block)
         '''
-        announce_new_block(blockchain.last_block)
+        if peers:
+            announce_new_block(blockchain.last_block)
+
         return "Block #{} is mined.".format(blockchain.last_block.index)
 
 
@@ -385,7 +387,7 @@ def verify_and_add_block():
     # this node will announce the new block also to its peers
     # thus the node is propagated through the network
     
-    if added[0]:
+    if added[0] and peers:
         announce_new_block(block)
 
     #return "Block added to the chain", 201
@@ -473,6 +475,8 @@ def attack():
     #print("UDO:"+tampered_block.transactions[0]["content"])
     tampered_block.transactions[0]["content"] = "I hate icecream"
     '''
+    if not peers:
+        return "No peers existing"
 
     response = announce_new_block(tampered_block)
 
@@ -565,6 +569,7 @@ def announce_new_block(block):
     # gathering responses from its peers
     # responses of peer of peers are not propagated through
     responses = []
+   
     for peer in peers:
         url = "{}/add_block".format(peer)
         headers = {'Content-Type': "application/json"}
@@ -572,6 +577,8 @@ def announce_new_block(block):
                                  data=json.dumps(block.__dict__, sort_keys=True),
                                  headers=headers)
         print(response.json())
+        # response is a dictionary/json object, with the field status and message
+        # status indicating if the block was added by the peer, message why potentially not
         responses.append(response.json())
 
     for r in responses:
