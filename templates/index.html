@@ -2,38 +2,46 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-	<center>
-	<form action="/submit" id="textform" method="post">
-		<div class="alignleft">	
+	<br>
+	<div class="alignleft">	
+		<form action="/submit" id="textform" method="post">
 			<center><h3>Submit a Transaction</h3></center>
+			<center>
 			<textarea name="content" rows="4" cols="50" placeholder="Certificate content..."></textarea>
 			
 			<br><br>
 
 			<input type="text" name="author" placeholder="Candidate">
 			<input type="submit" value="Post">
-
-			<br><br>
-		</div>
-	</form>
-
-	<center> 
+			</center>
+			<br>
+		</form>
+		<center>
 		<a href="/mine_app"><button>Request to mine</button></a>
 		<a href="/"><button>Resync</button></a>
-	</center>
+		</center>
+		<br>
+	</div>	
 
 	<div class="alignright">
-		<center><h3>Search a Document</h3></center>
-		<textarea name="content" rows="4" cols="50" placeholder="Certificate content..."></textarea>
-		
-		<br><br>
+		<form action="/search" id="textform" method="post">
+			<center><h3>Search a Document</h3></center>
+			<center>
+			<textarea name="content" rows="2" cols="50" placeholder="Input a transaction..."></textarea>
+			</center>
 
-		<input type="text" name="author" placeholder="Candidate">
-		<input type="submit" value="Post">
+			<p><b> Output: {{answer}}</b></p>
+
+			<br>
+
+			<center>
+			<input type="submit" value="Search">
+			</center>
+			<br>
+		</form>
 	</div>
 
-	<br><br><br><br><br><br><br><br><br><br><br><br>
+	<br><br><br><br><br><br><br><br><br><br><br><br><br><br>
 
 	<div style="margin: 20px;">
 
@@ -56,8 +64,11 @@
 		<div class="post_box">
 			<div class="post_box-header">
 				<div style="background: rgb(0, 97, 146) none repeat scroll 0% 0%; box-shadow: rgb(0, 97, 146) 0px 0px 0px 2px;" class="post_box-avatar">{{post.index}}</div>
-				<div class="name-header">Block #{{post.index}}</div>
-				<div class="name-header">Miner: {{post.miner}}</div>
+				<div class="name-header"><b>Block #{{post.index}}</b></div>
+				<div class="name-header"><b>Miner:</b> {{post.miner}}</div>
+				<div class="name-header"><b>Hash:</b> {{post.hash}}</div>
+				<div class="name-header" style="padding-left:56px"><b>Previous Hash:</b> {{post.previous_hash}}</div>
+				<div class="name-header" style="padding-left:56px"><b>Nonce:</b> {{post.nonce}}</div>
 			{% for p in post.transactions %}
 			<div class="post_box-body">
 				<p>Author: {{p.author}}</p>
@@ -86,6 +97,7 @@
 		.alignleft {
 			background: #fff;
 			margin-left: 120px;
+			margin-bottom: 40px;
 			float: left;
 			border-style: groove;
 		}

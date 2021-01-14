@@ -21,6 +21,7 @@ NODE_ADDRESS_list = []
 CONNECTED_NODE_ADDRESS = ""
 posts = []
 txs = []
+answer = ""
   
 pool_of_unmined_txs = []
 
@@ -61,6 +62,7 @@ def index():
                            title='LMU University: Decentralized Certificates Storage',
                            posts=posts,
                            txs=txs,
+                           answer = answer,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string)
 
@@ -86,15 +88,29 @@ def submit_textarea():
 
     pool_of_unmined_txs.append(transaction)
 
-    # Submit a transaction
-    #new_tx_address = "{}/new_transaction".format(CONNECTED_NODE_ADDRESS)
-
-    #requests.post(new_tx_address,
-                  #json=transaction,
-                  #headers={'Content-type': 'application/json'})
-
     return redirect('/')
 
+@app.route('/search', methods=['POST'])
+def search_textarea():
+    """
+    Endpoint to search for a transaction via our application.
+    """
+    get_chain_address = "{}/chain".format(CONNECTED_NODE_ADDRESS)
+    response = requests.get(get_chain_address)
+    global answer
+    if response.status_code == 200:
+        content = request.form["content"]
+        content = sha256(content.encode()).hexdigest()
+        chain = json.loads(response.content)
+        for block in chain["chain"]:
+            for tx in block["transactions"]:
+                if content == tx['hash']:
+                    answer = "Transaction Found"
+                    return redirect('/')
+                else:
+                    answer = "Transaction Not Found"
+    
+    return redirect('/')
 
 @app.route('/mine_app')
 def start_mining():

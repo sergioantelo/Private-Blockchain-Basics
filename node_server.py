@@ -377,12 +377,35 @@ def verify_and_add_block():
 
     return "Block added to the chain", 201
 
-
 # endpoint to query unconfirmed transactions
 @app.route('/pending_tx')
 def get_pending_tx():
     return json.dumps(blockchain.unconfirmed_transactions)
 
+@app.route('/attack')
+def attack(self):
+    '''
+    Create a tampered block
+    '''
+    transaction = {
+        'author': 'Sergio',
+        'content': 'Attack',
+        'timestamp': time.time(),
+        'hash': sha256('Attack'.encode()).hexdigest()
+    }
+
+    last_block = self.last_block
+    tampered_block = Block(index=last_block.index + 1,
+                          transactions=[transaction],
+                          timestamp=time.time(),
+                          previous_hash='0x123abc',#last_block.hash,
+                          miner=request.host_url)
+
+    response = announce_new_block(tampered_block)
+    if response == False:
+        return "Tampered block was identified"
+    else:
+        return "Security mechanism is not working"
 
 def consensus():
     """
@@ -426,12 +449,20 @@ def announce_new_block(block):
     Other nodes can simply verify the proof of work and add it to their
     respective chains.
     """
+    responses = []
     for peer in peers:
         url = "{}/add_block".format(peer)
         headers = {'Content-Type': "application/json"}
-        requests.post(url,
+        response = requests.post(url,
                       data=json.dumps(block.__dict__, sort_keys=True),
                       headers=headers)
+
+        responses.append(response)
+
+    if False in responses:
+        return False
+    else:
+        return True
 
 # Uncomment this line if you want to specify the port number in the code
 #app.run(debug=True, port=8000)
