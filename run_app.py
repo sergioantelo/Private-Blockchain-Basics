@@ -6,6 +6,7 @@ import sys
 import time
 from hashlib import sha256
 import random
+import os
 
 ##########
 #FELIX
@@ -22,6 +23,10 @@ CONNECTED_NODE_ADDRESS = ""
 posts = []
 txs = []
 answer = ""
+difficulty = 2
+connected_node = localhost+'8000'
+new_node = ""
+attack = ""
   
 pool_of_unmined_txs = []
 
@@ -63,6 +68,10 @@ def index():
                            posts=posts,
                            txs=txs,
                            answer = answer,
+                           difficulty = difficulty,
+                           connected_node = connected_node,
+                           new_node = new_node,
+                           attack = attack,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string)
 
@@ -134,6 +143,61 @@ def start_mining():
 
     return response.text
 
+@app.route('/modify_diff', methods=['POST'])
+def modify_textarea():
+    """
+    Endpoint to change the difficulty via our application.
+    """
+    diff = request.form["difficulty"]
+    modify_address = "{}/modify_difficulty".format(CONNECTED_NODE_ADDRESS)
+    requests.post(modify_address,
+                    json=diff,
+                    headers={'Content-type': 'application/json'})
+    
+    global difficulty
+    difficulty = diff
+
+    return redirect('/')
+
+@app.route('/switch_node', methods=['POST'])
+def switch_connected_node():
+    node = request.form["node"]
+    node_address = localhost+node
+
+    global CONNECTED_NODE_ADDRESS
+    global connected_node
+    for node in NODE_ADDRESS_list:
+        if node_address == node:
+            CONNECTED_NODE_ADDRESS = node_address
+            connected_node = node_address
+            return redirect('/')
+        else:
+            pass
+
+    connected_node = "Invalid node, currently: " + CONNECTED_NODE_ADDRESS
+    return redirect('/')
+
+@app.route('/add_new_node', methods=['POST'])
+def add_node():
+    node = request.form["new_node"]
+    node_address = localhost+node
+    NODE_ADDRESS_list.append(node_address)
+
+    global new_node
+    new_node = node_address
+
+    return redirect('/')
+
+@app.route('/tampered_block', methods=['POST'])
+def tampered_block():
+    address = "{}/attack".format(CONNECTED_NODE_ADDRESS)
+    message = requests.get(address)
+
+    global attack
+    attack = message
+
+    return redirect('/')
+
 def timestamp_to_string(epoch_time):
     return datetime.datetime.fromtimestamp(epoch_time).strftime('%H:%M')
 
@@ -148,8 +212,6 @@ if __name__=="__main__":
         NODE_ADDRESS_list.append(localhost+node)
 
     CONNECTED_NODE_ADDRESS = NODE_ADDRESS_list[0]
-
-    print(CONNECTED_NODE_ADDRESS)
 
     app.run(debug=True,port=host_node)
 

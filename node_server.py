@@ -5,6 +5,7 @@ import time
 import sys
 from flask import Flask, request, redirect
 import requests
+import os
 
 class Block:
     def __init__(self, index, transactions, timestamp, previous_hash, nonce=0, miner=""):
@@ -33,7 +34,10 @@ class Blockchain:
         self.chain = []
 
     def set_difficulty(self,diff):
-        Blockchain.difficulty = diff
+        self.difficulty = diff
+
+    def get_difficulty(self,diff):
+        return self.difficulty
 
     def create_genesis_block(self):
         """
@@ -320,11 +324,9 @@ def register_with_existing_node():
     for peer in peers_list:
         if peer in peers:
             continue
-        print(peer)
         response = requests.post(peer + "/register_node",
                                  data=json.dumps(data), headers=headers)
         if response.status_code==200:
-            print("peer was added")
             peers.add(peer)
 
 
@@ -495,6 +497,18 @@ def modify_difficulty(self,diff):
     '''
     blockchain.set_difficulty(diff)
 
+@app.route('/get_difficulty')
+def retrieve_difficulty(self,diff):
+    '''
+    Set a different difficulty
+    '''
+    return blockchain.difficulty
+
+@app.route('/run_server')
+def run_server():
+    node = request.get_json()
+    os.system('python node_server.py ' + node)
+
 def create_chain_from_dump(chain_dump):
     generated_blockchain = Blockchain()
     generated_blockchain.create_genesis_block()
@@ -588,7 +602,6 @@ def announce_new_block(block):
     
     print(responses)
     return responses[0]
-
 
 # Uncomment this line if you want to specify the port number in the code
 #app.run(debug=True, port=8000)
