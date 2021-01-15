@@ -25,19 +25,14 @@ class Block:
 
 
 class Blockchain:
-    # difficulty of our PoW algorithm
+    
     difficulty = 2
 
     def __init__(self):
         self.unconfirmed_transactions = []
         self.chain = []
-
-    def set_difficulty(self,diff):
-        self.difficulty = diff
-
-    def get_difficulty(self):
-        return self.difficulty
-
+        # difficulty of our PoW algorithm
+        
     def create_genesis_block(self):
         """
         A function to generate genesis block and appends it to
@@ -84,8 +79,40 @@ class Blockchain:
 
         return block_validity
 
-    @staticmethod
-    def proof_of_work(block):
+    def add_new_transaction(self, transaction):
+        self.unconfirmed_transactions.append(transaction)
+
+    def get_last_tx_timestamp(self):
+        self.unconfirmed_transactions[-1]["timestamp"]
+    
+    def mine(self):
+        """
+        This function serves as an interface to add the pending
+        transactions to the blockchain by adding them to the block
+        and figuring out Proof Of Work.
+        """
+        if not self.unconfirmed_transactions:
+            return False
+
+        last_block = self.last_block
+
+        new_block = Block(index=last_block.index + 1,
+                          transactions=self.unconfirmed_transactions,
+                          timestamp=time.time(),
+                          previous_hash=last_block.hash,
+                          miner = request.host_url)
+
+        proof = self.proof_of_work(new_block)
+
+        self.add_block(new_block, proof)
+
+        self.unconfirmed_transactions = []
+
+        return True
+
+
+    @classmethod
+    def proof_of_work(cls,block):
         """
         Function that tries different values of nonce to get a hash
         that satisfies our difficulty criteria.
@@ -93,21 +120,27 @@ class Blockchain:
         block.nonce = 0
 
         computed_hash = block.compute_hash()
-        while not computed_hash.startswith('0' * Blockchain.difficulty):
+        while not computed_hash.startswith('0' * cls.difficulty):
             block.nonce += 1
             computed_hash = block.compute_hash()
 
         return computed_hash
 
-    def add_new_transaction(self, transaction):
-        self.unconfirmed_transactions.append(transaction)
+    @classmethod
+    def set_difficulty(cls,diff):
+        if(diff<=0):
+            return False
+        
+        cls.difficulty = diff
+        return True
 
-    def get_last_tx_timestamp(self):
-        self.unconfirmed_transactions[-1]["timestamp"]
-
+    @classmethod
+    def get_difficulty(cls):
+        return cls.difficulty
 
     @classmethod
     def is_valid_proof(cls, block, block_hash):
+    #def is_valid_proof(self, block, block_hash):
         """
         Check if block_hash is valid hash of block and satisfies
         the difficulty criteria.
@@ -143,31 +176,7 @@ class Blockchain:
 
         return result
 
-    def mine(self):
-        """
-        This function serves as an interface to add the pending
-        transactions to the blockchain by adding them to the block
-        and figuring out Proof Of Work.
-        """
-        if not self.unconfirmed_transactions:
-            return False
-
-        last_block = self.last_block
-
-        new_block = Block(index=last_block.index + 1,
-                          transactions=self.unconfirmed_transactions,
-                          timestamp=time.time(),
-                          previous_hash=last_block.hash,
-                          miner = request.host_url)
-
-        proof = self.proof_of_work(new_block)
-
-        self.add_block(new_block, proof)
-
-        self.unconfirmed_transactions = []
-
-        return True
-
+    
 
 app = Flask(__name__)
 localhost = "http://127.0.0.1:"
@@ -299,7 +308,7 @@ def register_new_peers():
 
 #D:\Felix\Documents\Studiumunterlagen\Vorlesungsskripte\Master_LMU\WS 20_21\DataSecurity&Ethics\Blockchain\python_blockchain_app
 @app.route('/register_with', methods=['POST'])
-def register_with_existing_node():
+def register_with_existing_node(): # SHOULD BE RENMED INTO SYNCHRONIZE WITH NODES/PEERS
     """
     Internally calls the `register_node` endpoint to
     register current node with the node specified in the
@@ -310,15 +319,16 @@ def register_with_existing_node():
     if not peers_list:
         return "Invalid data", 400
 
+    # some peers were submitted, thus it will be checked if these peers are known to this node
+    # if not the node will register itself to the specified peers
     data = {"node_address": request.host_url}
     headers = {'Content-Type': "application/json"}
 
     '''
     # Make a request to register with remote node and obtain information
     response = requests.post(node_address + "/register_node",
-                             data=json.dumps(data), headers=headers)
+                            data=json.dumps(data), headers=headers)
     '''
-
     for peer in peers_list:
         if peer in peers:
             continue
@@ -327,7 +337,14 @@ def register_with_existing_node():
         if response.status_code==200:
             peers.add(peer)
 
+    #if not peers_list:
+        # if the node has no peers registered yet
+    #    return "No peers to synchronize with."
 
+    # this function could also be used, just to synchronize a node with its peers
+    # if you don't pass any peers, the node will call the consensus function
+    # and thus ask of all of its known peers for their blockchain and takes over
+    # the longst chain found unless its chain has equal or greated length
     update_local_chain = consensus()
     
     '''       
@@ -358,7 +375,22 @@ def register_with_existing_node():
         return "Registration successful. Chain updated", 200
     else:        
         return "Registration succesful. No longer chain found among peers"
-        
+
+
+
+@app.route('/synchronize_with_peers')
+def synch_with_peers():
+    synch = consensus()
+
+    if not peers:
+        return "No Peers to synchronize with."
+
+    if synch[0]:
+        return "Synchronisation succesful."
+    else:
+        return "No longer chain found among peers."
+
+
 # endpoint to add a block mined by someone else to
 # the node's chain. The block is first verified by the node
 # and then added to the chain.
@@ -493,10 +525,15 @@ def modify_difficulty():
     '''
     Set a different difficulty
     '''
+    
     diff = request.get_json()["difficulty"]
-    blockchain.set_difficulty(int(diff))
-    return str(blockchain.difficulty)
-
+    print(diff)
+    set_diff = Blockchain.set_difficulty(int(diff))
+    
+    if set_diff:
+        return diff
+    else:
+        return "Difficulty unchanged."
 '''
 @app.route('/get_difficulty')
 def retrieve_difficulty(self,diff):

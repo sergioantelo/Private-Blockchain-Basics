@@ -23,7 +23,7 @@ CONNECTED_NODE_ADDRESS = ""
 posts = []
 txs = []
 answer = ""
-difficulty = ""
+difficulty = "2"
 connected_node = localhost+'8000'
 new_node = ""
 register = ""
@@ -157,8 +157,8 @@ def modify_textarea():
 
         post_content = {"difficulty":diff}
         response = requests.post(modify_address,
-                        json=post_content,
-                        headers={'Content-type': 'application/json'})
+                                 json=post_content,
+                                 headers={'Content-type': 'application/json'})
     
     global difficulty
     difficulty = response.text
@@ -200,7 +200,20 @@ def reg_with():
     node_base_address = localhost+node_base
 
     list_nodes = request.form["list_nodes"]
+    global register
 
+    # if no nodes to register with were submitted then the command is used to
+    # synchronize the specified node_base with its peers, which is looking for the longest chain
+    if not list_nodes:
+        #print("HELLLLLO")
+        address = "{}/synchronize_with_peers".format(node_base_address)
+        response = requests.get(address)
+        register = response.text
+        return redirect('/')
+
+
+
+    list_nodes = list_nodes.replace(" ","")
     modified_list = list_nodes.split(",")
 
     new_nodes = []
@@ -208,15 +221,15 @@ def reg_with():
         node = localhost+node
         new_nodes.append(node)
         
-    get_register_address = "{}/register_with".format(node_base_address)
-
     post_content = {"peers_list":new_nodes}
+
+    get_register_address = "{}/register_with".format(node_base_address)
 
     response = requests.post(get_register_address,
                       json=post_content,
                       headers={'Content-type': 'application/json'})
 
-    global register
+    
     register = response.text
 
     return redirect('/')
