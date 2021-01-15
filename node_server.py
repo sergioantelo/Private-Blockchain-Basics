@@ -5,7 +5,6 @@ import time
 import sys
 from flask import Flask, request, redirect
 import requests
-import os
 
 class Block:
     def __init__(self, index, transactions, timestamp, previous_hash, nonce=0, miner=""):
@@ -36,7 +35,7 @@ class Blockchain:
     def set_difficulty(self,diff):
         self.difficulty = diff
 
-    def get_difficulty(self,diff):
+    def get_difficulty(self):
         return self.difficulty
 
     def create_genesis_block(self):
@@ -277,7 +276,6 @@ def mine_unconfirmed_transactions():
 
         return "Block #{} is mined.".format(blockchain.last_block.index)
 
-
 # endpoint to add new peers to the network.
 @app.route('/register_node', methods=['POST'])
 def register_new_peers():
@@ -490,24 +488,20 @@ def attack():
         # of the proofing alogorithms is not working
         return "Security mechanism is not working"
 
-@app.route('/modify_difficulty')
-def modify_difficulty(self,diff):
+@app.route('/modify_difficulty', methods=['POST'])
+def modify_difficulty():
     '''
     Set a different difficulty
     '''
-    blockchain.set_difficulty(diff)
+    diff = request.get_json()["difficulty"]
+    blockchain.set_difficulty(int(diff))
+    return str(blockchain.difficulty)
 
+'''
 @app.route('/get_difficulty')
 def retrieve_difficulty(self,diff):
-    '''
-    Set a different difficulty
-    '''
     return blockchain.difficulty
-
-@app.route('/run_server')
-def run_server():
-    node = request.get_json()
-    os.system('python node_server.py ' + node)
+'''
 
 def create_chain_from_dump(chain_dump):
     generated_blockchain = Blockchain()

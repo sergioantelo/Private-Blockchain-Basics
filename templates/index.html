@@ -110,7 +110,7 @@
 				<form action="/add_new_node" id="textform" method="post">
 					<center><h3>Add New Node</h3></center>
 					<center>
-					<textarea name="new_node" rows="2" cols="50" placeholder="Input the new node..."></textarea>
+					<textarea name="list_nodes" rows="2" cols="50" placeholder="Input the new node..."></textarea>
 					</center>
 		
 					<p><b> New node added:</b> {{new_node}}</p>
@@ -123,15 +123,15 @@
 				</form>
 			</div>
 			<div class="function">
-				<form action="/register_with" id="textform" method="post">
+				<form action="/reg_with" id="textform" method="post">
 					<center><h3>Register Nodes</h3></center>
 					<center>
 					<textarea name="node1" rows="2" cols="50" placeholder="Input the base node..."></textarea>
 					<p>with</p>
-					<textarea name="node2" rows="2" cols="50" placeholder="Input the register with node..."></textarea>
+					<textarea name="list_nodes" rows="2" cols="50" placeholder="Input the register with node..."></textarea>
 					</center>
 		
-					<p><b> Registered:</b> </p>
+					<p><b> Output:</b> {{register}}</p>
 		
 					<br>
 		

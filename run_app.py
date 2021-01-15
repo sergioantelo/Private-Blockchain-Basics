@@ -23,9 +23,10 @@ CONNECTED_NODE_ADDRESS = ""
 posts = []
 txs = []
 answer = ""
-difficulty = 2
+difficulty = ""
 connected_node = localhost+'8000'
 new_node = ""
+register = ""
 attack = ""
   
 pool_of_unmined_txs = []
@@ -71,6 +72,7 @@ def index():
                            difficulty = difficulty,
                            connected_node = connected_node,
                            new_node = new_node,
+                           register = register,
                            attack = attack,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string)
@@ -149,13 +151,17 @@ def modify_textarea():
     Endpoint to change the difficulty via our application.
     """
     diff = request.form["difficulty"]
-    modify_address = "{}/modify_difficulty".format(CONNECTED_NODE_ADDRESS)
-    requests.post(modify_address,
-                    json=diff,
-                    headers={'Content-type': 'application/json'})
+
+    for peer in NODE_ADDRESS_list:
+        modify_address = "{}/modify_difficulty".format(peer)
+
+        post_content = {"difficulty":diff}
+        response = requests.post(modify_address,
+                        json=post_content,
+                        headers={'Content-type': 'application/json'})
     
     global difficulty
-    difficulty = diff
+    difficulty = response.text
 
     return redirect('/')
 
@@ -185,6 +191,33 @@ def add_node():
 
     global new_node
     new_node = node_address
+
+    return redirect('/')
+
+@app.route('/reg_with', methods=['POST'])
+def reg_with():
+    node_base = request.form["node1"]
+    node_base_address = localhost+node_base
+
+    list_nodes = request.form["list_nodes"]
+
+    modified_list = list_nodes.split(",")
+
+    new_nodes = []
+    for node in modified_list:
+        node = localhost+node
+        new_nodes.append(node)
+        
+    get_register_address = "{}/register_with".format(node_base_address)
+
+    post_content = {"peers_list":new_nodes}
+
+    response = requests.post(get_register_address,
+                      json=post_content,
+                      headers={'Content-type': 'application/json'})
+
+    global register
+    register = response.text
 
     return redirect('/')
 
