@@ -1,9 +1,9 @@
 from hashlib import sha256
 import json
 import time
-
+import numpy as np 
 import sys
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, render_template
 import requests
 
 class Block:
@@ -47,6 +47,19 @@ class Blockchain:
     @property
     def last_block(self):
         return self.chain[-1]
+    
+  
+    def retrieve_block(self, idx):
+        if idx < 0 or idx > len(self.chain):
+            return False
+
+        for b in self.chain:
+            if idx == b.index:
+                return b
+        
+        # NO block with specified index present
+        return False
+
 
     def add_block(self, block, proof):
         """
@@ -397,6 +410,7 @@ def synch_with_peers():
 @app.route('/add_block', methods=['POST'])
 def verify_and_add_block():
     block_data = request.get_json()
+
     block = Block(block_data["index"],
                   block_data["transactions"],
                   block_data["timestamp"],
@@ -419,11 +433,12 @@ def verify_and_add_block():
     # this node will announce the new block also to its peers
     # thus the node is propagated through the network
     
+    # only if peers are known the announce is called, and when the received block is correct 
     if added[0] and peers:
         announce_new_block(block)
 
     #return "Block added to the chain", 201
-
+       
     return json.dumps({"status":added[0],"message":added[1]})
 
 # endpoint to query unconfirmed transactions
@@ -455,70 +470,93 @@ def add_fixed_block():
 
     return redirect("/chain")
 
-@app.route('/attack')
+@app.route('/attack', methods=['POST'])
 def attack():
-    '''
-    Create a tampered block
-    '''
+    
+    if not peers:
+        return "No peers existing"
+    
+    data = request.get_json()
+    # data should contain the field attack which specifies which attack: A,B,C,D
+    # where A means no attack
+    # if we would like to also give contents which should be used in the different attacks
+    # then we can specify a further field, which is used by the respective attack
 
-    # attack where the transaction and the block fields are correct
-    # but the attacker used a different last.block as reference
-    # thus he is kind of "suggesting" an alternative blockchain 
+    global blockchain
     transaction = {
-        'author': 'Sergio',
-        'content': 'Attack',
+        'author': 'Captain Hook',
+        'content': 'A simple default transaction.',
         'timestamp': time.time(),
-        'hash': sha256('Attack'.encode()).hexdigest()
+        'hash': sha256('A simple default transaction.'.encode()).hexdigest()
     }
 
-    #last_block = self.last_block
-    tampered_block = Block(index=999,#last_block.index + 1,
-                           transactions=[transaction],
-                           timestamp=time.time(),
-                           previous_hash='0x123abc',#last_block.hash,
-                           miner=request.host_url)
-
-    hash_tampered_block = Blockchain.proof_of_work(tampered_block)
-    tampered_block.hash = hash_tampered_block
-
-    #------------------------------------
-    '''
-    # ALTERNATIVE, no correct hash field due to later changes on transaction content
-    transaction = {
-        'author': 'Sergio',
-        'content': 'I like icecream',
-        'timestamp': time.time(),
-        'hash': sha256('Attack'.encode()).hexdigest()
-    }
-    #global blockchain
     last_block = blockchain.last_block
-    tampered_block = Block(index=last_block.index + 1,
+    default_block = Block( index=last_block.index + 1,
                            transactions=[transaction],
                            timestamp=time.time(),
                            previous_hash=last_block.hash,
-                           miner=request.host_url)
-    
-    hash_tampered_block = Blockchain.proof_of_work(tampered_block)
-    tampered_block.hash = hash_tampered_block
-    # no the block becomes tampered
-    # because if you compute now the hash again, then it will not match with the hash field
-    # but recomputing takes to much time for the attacker due to the "difficulty"
-    
-    #print("UDO:"+tampered_block.transactions[0]["content"])
-    tampered_block.transactions[0]["content"] = "I hate icecream"
-    '''
-    if not peers:
-        return "No peers existing"
+                           miner=request.host_url )
 
-    response = announce_new_block(tampered_block)
+    if data["attack"]=="A":
+        # we just add a default block
+        # JUST NEEDED FOR TEST PURPOSES
+        hash_default_block = Blockchain.proof_of_work(default_block)
+        default_block.hash = hash_default_block
 
-    if not response["status"]:
-        # means that the block was not added
-        return "Tampered block was identified: "+response["message"]
+        response = announce_new_block(default_block)
+        if response["status"]:
+            return "Default block was added."
+        else:
+            return "Something not working."
     else:
-        # because we actively sent a uncorrect block, but if this was accepted then something
-        # of the proofing alogorithms is not working
-        return "Security mechanism is not working"
+
+        tampered_block = default_block
+
+        if data["attack"]=="B":
+            # attack where the transaction and the block fields are correct
+            # but the attacker used a different last.block as reference
+            # thus he is kind of "suggesting" an alternative blockchain
+                
+            if last_block.index == 0:
+                return "Blockchain only has genesis block. No chage of previous hash possible."
+            else:
+                block = blockchain.retrieve_block(last_block.index-1)
+                
+                tampered_block.previous_hash = block.hash
+                tampered_block.index = block.index
+                hash_tampered_block = Blockchain.proof_of_work(tampered_block)
+                tampered_block.hash = hash_tampered_block
+
+        elif data["attack"]=="C":
+            # first calc hash, then change transaction content
+            hash_tampered_block = Blockchain.proof_of_work(tampered_block)
+            tampered_block.hash = hash_tampered_block
+            # no the block becomes tampered
+            # because if you compute now the hash again, then it will not match with the hash field
+            # but recomputing takes to much time for the attacker due to the "difficulty"
+            tampered_block.transactions[0]["content"] = "ATTACK"
+            tampered_block.transactions[0]["hash"] = sha256('ATTACK'.encode()).hexdigest()
+        
+        elif data["attack"]=="D":
+            # everything fine: previous hash, hash field matches content, but the difficulty was decreased
+            # to be the first
+            current_diff = Blockchain.get_difficulty()
+            Blockchain.set_difficulty(1)
+
+            hash_tampered_block = Blockchain.proof_of_work(tampered_block)
+            tampered_block.hash = hash_tampered_block
+            
+            Blockchain.set_difficulty(current_diff)
+    
+        response = announce_new_block(tampered_block)
+      
+        if not response["status"]:
+            # means that the block was not added
+            return "Tampered block was identified: "+response["message"]
+        else:
+            # because we actively sent a uncorrect block, but if this was accepted then something
+            # of the proofing alogorithms is not working
+            return "Security mechanism is not working"
 
 @app.route('/modify_difficulty', methods=['POST'])
 def modify_difficulty():
@@ -621,6 +659,7 @@ def announce_new_block(block):
         response = requests.post(url,
                                  data=json.dumps(block.__dict__, sort_keys=True),
                                  headers=headers)
+        
         print(response.json())
         # response is a dictionary/json object, with the field status and message
         # status indicating if the block was added by the peer, message why potentially not

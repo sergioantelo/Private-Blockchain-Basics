@@ -10,7 +10,7 @@ import os
 
 ##########
 #FELIX
-######
+#####
 # Before package structre, with importing the app variable from the app folder, and calling app.run here, and having
 # the application code (view) in separate file. Probably there was a reason, but so far it works this way too and is maybe more intuitive
 ###### 
@@ -237,8 +237,15 @@ def reg_with():
 @app.route('/tampered_block', methods=['POST'])
 def tampered_block():
     address = "{}/attack".format(CONNECTED_NODE_ADDRESS)
-    message = requests.get(address)
 
+    # has to be fetched from the specified check boxes
+    attack_kind = {"attack":"C"}
+
+
+    message = requests.post(address,
+                            json=attack_kind,
+                            headers={'Content-type': 'application/json'})
+   
     global attack
     attack = message
 
