@@ -24,9 +24,11 @@ posts = []
 txs = []
 answer = ""
 difficulty = "2"
+available_nodes = []
 connected_node = localhost+'8000'
 new_node = ""
 register = ""
+tamp_block = []
 attack = ""
   
 pool_of_unmined_txs = []
@@ -70,9 +72,11 @@ def index():
                            txs=txs,
                            answer = answer,
                            difficulty = difficulty,
+                           available_nodes = NODE_ADDRESS_list,
                            connected_node = connected_node,
                            new_node = new_node,
                            register = register,
+                           tamp_block = tamp_block,
                            attack = attack,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string)
@@ -205,13 +209,10 @@ def reg_with():
     # if no nodes to register with were submitted then the command is used to
     # synchronize the specified node_base with its peers, which is looking for the longest chain
     if not list_nodes:
-        #print("HELLLLLO")
         address = "{}/synchronize_with_peers".format(node_base_address)
         response = requests.get(address)
         register = response.text
         return redirect('/')
-
-
 
     list_nodes = list_nodes.replace(" ","")
     modified_list = list_nodes.split(",")
@@ -239,14 +240,16 @@ def tampered_block():
     address = "{}/attack".format(CONNECTED_NODE_ADDRESS)
 
     # has to be fetched from the specified check boxes
-    attack_kind = {"attack":"C"}
+    attack_type = request.form["attack_type"]
+    attack_type_dict = {"attack":attack_type}
 
-
-    message = requests.post(address,
-                            json=attack_kind,
+    tampered_block, message = requests.post(address,
+                            json=attack_type_dict,
                             headers={'Content-type': 'application/json'})
    
     global attack
+    global tamp_block
+    tamp_block = tampered_block
     attack = message
 
     return redirect('/')

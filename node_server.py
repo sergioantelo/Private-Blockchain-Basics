@@ -518,7 +518,7 @@ def attack():
             # thus he is kind of "suggesting" an alternative blockchain
                 
             if last_block.index == 0:
-                return "Blockchain only has genesis block. No chage of previous hash possible."
+                return "Blockchain only has genesis block. No change of previous hash possible."
             else:
                 block = blockchain.retrieve_block(last_block.index-1)
                 
@@ -531,9 +531,9 @@ def attack():
             # first calc hash, then change transaction content
             hash_tampered_block = Blockchain.proof_of_work(tampered_block)
             tampered_block.hash = hash_tampered_block
-            # no the block becomes tampered
+            # now the block becomes tampered
             # because if you compute now the hash again, then it will not match with the hash field
-            # but recomputing takes to much time for the attacker due to the "difficulty"
+            # but recomputing takes too much time for the attacker due to the "difficulty"
             tampered_block.transactions[0]["content"] = "ATTACK"
             tampered_block.transactions[0]["hash"] = sha256('ATTACK'.encode()).hexdigest()
         
@@ -552,7 +552,7 @@ def attack():
       
         if not response["status"]:
             # means that the block was not added
-            return "Tampered block was identified: "+response["message"]
+            return (tampered_block, "Tampered block was identified: "+response["message"])
         else:
             # because we actively sent a uncorrect block, but if this was accepted then something
             # of the proofing alogorithms is not working
