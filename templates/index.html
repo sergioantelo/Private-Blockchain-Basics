@@ -5,28 +5,24 @@
 	<br>
 	<div class="container">
 		<div class="left">
-			<div class="row_left">
-				<div class="transaction">
-					<form action="/submit" id="textform" method="post">
-						<center><h3>Submit a Transaction</h3></center>
-						<label for="fcontent">Certificate content:</label><br>
-						<input type="text" id="fcontent" name="content"><br>
-
-						<label for="fauthor">Candidate:</label><br>
-						<input type="text" id="fauthor" name="author"><br><br>
-						<center>
-						<input type="submit" value="Post" class="button_generic">
-						</center>
-					</form>
-				</div>
-				<div class="transaction">
-					<br>
-					<center><h3>Options</h3></center>
+			<div class="transaction">
+				<form action="/submit" id="textform" method="post">
+					<center><h3>Submit a Transaction</h3></center>
 					<center>
-					<a href="/mine_app"><button class="button_generic">Request to mine</button></a>
-					<a href="/"><button class="button_generic">Resync</button></a>
+					<label for="fcontent">Certificate content:</label><br>
+					<textarea id="fcontent" name="content" rows="2" cols="17"></textarea><br><br>
+
+					<label for="fauthor">Candidate:</label><br>
+					<input type="text" id="fauthor" name="author"><br><br>
+
+					<input type="submit" value="Post" class="button_generic">
 					</center>
-				</div>
+				</form>
+				<center>
+					<a href="/mine_app"><button class="button_generic">Request to mine</button></a>
+					<!--<a href="/"><button class="button_generic">Resync</button></a>-->
+				</center>
+				
 			</div>
 
 			<div class='blockchain'>
@@ -43,7 +39,7 @@
 				{% for post in posts[::-1] %}
 				<div class="post_box">
 					<div class="post_box-header">
-						<div style="background: rgb(0, 97, 146) none repeat scroll 0% 0%; box-shadow: rgb(0, 97, 146) 0px 0px 0px 2px;" class="post_box-avatar">{{post.index}}</div>
+						<div style="background: lightsalmon none repeat scroll 0% 0%; box-shadow: lightcoral 0px 0px 0px 2px;" class="post_box-avatar">{{post.index}}</div>
 						<div class="name-header"><b>Block #{{post.index}}</b></div>
 						<div class="name-header"><b>Miner:</b> {{post.miner}}</div>
 						<div class="name-header"><b>Hash:</b> {{post.hash}}</div>
@@ -64,11 +60,12 @@
 		<div class="right">
 			<div class="row_right">
 				<div class="function">
-					<form action="/search" id="textform" method="post">
+					<form action="/search" id="textform" method="post" class="form">
 						<center><h3>Search a Document</h3></center>
 						<center>
 						<label for="fcontent">Transaction:</label><br>
 						<input type="text" id="fcontent" name="content"><br>
+						<p style="color:red;font-size:10px">{{answer_error}}</p>
 						</center>
 			
 						<center>
@@ -82,12 +79,13 @@
 				</div>
 			
 				<div class="function">
-					<form action="/switch_node" id="textform" method="post">
+					<form action="/switch_node" id="textform" method="post" class="form">
 						<center><h3>Switch Node</h3></center>
 						<center>
 						<p style="font-size: 10px"><b> Available nodes:</b> {{available_nodes}}</p>
 						<label for="fnode">New node:</label><br>
 						<input type="text" id="fnode" name="node"><br>
+						<p style="color:red;font-size:10px">{{connected_node_error}}</p>
 						</center>
 			
 						<center>
@@ -95,31 +93,44 @@
 						
 						<input type="submit" value="Switch" class="button_generic">
 						</center>
+						<br>
 					</form>
 				</div>
 				<div class="function">
 					<form action="/add_new_node" id="textform" method="post">
-						<center><h3>Add Node</h3></center>
+						<center><h3>Add/Delete Node</h3></center>
 						<center>
-						<label for="fnew_node">New node:</label><br>
-						<input type="text" id="fnew_node" name="new_node"><br>
+							<label for="fnew_node">New node:</label><br>
+							<input type="text" id="fnew_node" name="new_node"><br>
+							<p style="color:red;font-size:10px">{{new_node}}</p>
 						</center>
-			
+						<br>
+						<center>						
+							<input type="submit" value="Add" class="button_generic">
+						</center>
+					</form>
+					<form action="/delete_node" id="textform" method="post" class="form">
 						<center>
-						<p><b> New node added:</b> {{new_node}}</p>
-						
-						<input type="submit" value="Add" class="button_generic">
+							<label for="fdel_node">Delete node:</label><br>
+							<input type="text" id="fdel_node" name="del_node"><br>
+							<p style="color:red;font-size:10px">{{del_node}}</p>
 						</center>
+						<br>
+						<center>						
+						<input type="submit" value="Delete" class="button_generic">
+						</center>
+						<br>
 					</form>
 				</div>
 			</div>
 			<div class="row_right">
 				<div class="function">
-					<form action="/modify_diff" id="textform" method="post">
+					<form action="/modify_diff" id="textform" method="post" class="form">
 						<center><h3>Modify Difficulty</h3></center>
 						<center>
 						<label for="fdifficulty">New difficulty:</label><br>
 						<input type="text" id="fdifficulty" name="difficulty"><br>
+						<p style="color:red;font-size:10px">{{difficulty_error}}</p>
 						</center>
 						<center>
 						<p><b> Difficulty set to:</b> {{difficulty}}</p>
@@ -129,13 +140,14 @@
 					</form>
 				</div>
 				<div class="function">
-					<form action="/reg_with" id="textform" method="post">
+					<form action="/reg_with" id="textform" method="post" class="form">
 						<center><h3>Register Nodes</h3></center>
 						<center>
 						<label for="fnode1">Base node:</label><br>
 						<input type="text" id="fnode1" name="node1"><br>
 						<label for="flist_nodes">Register with node(s):</label><br>
 						<input type="text" id="flist_nodes" name="list_nodes"><br>
+						<p style="color:red;font-size:10px">{{register_error}}</p>
 						</center>
 			
 						<center>
@@ -143,29 +155,33 @@
 						
 						<input type="submit" value="Register" class="button_generic">
 						</center>
+						<br>
 					</form>
 				</div>
 				<div class="function">
-					<form action="/tampered_block" id="textform" method="post">
+					<form action="/tampered_block" id="textform" method="post" class="form">
 						<center><h3>Attack</h3></center>
+							<input type="checkbox" id="default" name="attack_type" value="A">
+							<label for="default"> Default Block</label><br>
+							<input type="checkbox" id="prev_hash" name="attack_type" value="B">
+							<label for="prev_hash"> Prev Hash Attack</label><br>
+							<input type="checkbox" id="difficulty" name="attack_type" value="D">
+							<label for="difficulty"> Difficulty Attack</label><br>
+							<input type="checkbox" id="hash" name="attack_type" value="C">
+							<label for="hash"> Transaction Attack</label><br>
+							<center>
+								<p><b> Response:</b> {{attack}}</p>
+							</center>
 						<center>
-						<label for="fattack_type">Attack type:</label><br>
-						<input type="text" id="fattack_type" name="attack_type"><br>
+							<input type="submit" value="Simulate Attack" class="button_generic">
 						</center>
-
-						<center>
-						<p><b> Response:</b> {{attack.text}}</p>
-
-						<input type="submit" value="Simulate Attack" class="button_generic">
-						</center>
-
 						<br>
-
+					</form>
+					<form action="/show_tampered_block" id="textform" class="form">
 						<center>
-						<div class="popup" onclick="myFunction()">Tampered Block Content
-							<span class="popuptext" id="myPopup">Hello</span>
-						</div>
+							<input type="submit" value="Tampered Block" class="button_specific">
 						</center>
+						<br>
 					</form>
 				</div>
 			</div>
@@ -187,7 +203,7 @@
 		}
 
 		.right {
-			width: 600px;
+			width: 640px;
 			float: right;
 			background: #fff;
 		}
@@ -196,7 +212,7 @@
 			float: left; /* not needed, just for clarification */
 			background: #fff;
 			/* the next props are meant to keep this block independent from the other floated one */
-			width: auto;
+			width: 660px;
 			overflow: hidden;
 		}​​
 
@@ -207,31 +223,35 @@
 			margin-left: 10px;
 		}
 
-		.row_left {
-    		border-spacing: 10px; /*Optional*/
-			width: 664px;
-			margin-left: 30px;
-		}
-
 		.transaction {
 			background: #fff;
-			padding: 10px 50px 10px 50px;
-			margin-bottom: 20px;
+			padding: 0px 0px 10px 0px;
+			margin-bottom: 30px;
 			margin-top: 10px;
+			margin-left: 200px;
+			margin-right: 200px;
 			border-style: groove;
-			display: table-cell;
 		}
-
+		
 		.function {
 			background: #fff;
 			border-style: groove;
 			display: table-cell;
-			padding: 10px 10px 10px 10px;
+			width: 150px;
+			height: 150px;
+			padding: 10px 10px 0px 10px;
 		}
-
+		
 		.row_right {
     		border-spacing: 10px; /*Optional*/
-			width: 600px;
+			width: 590px;
+			margin-left: 30px;
+		}
+
+		.form{
+			width: auto;
+			height: auto;
+			margin-bottom: 0px;
 		}
 
 		.post_box {
@@ -295,6 +315,17 @@
 			padding: 4px;
 			border: 2px solid grey;
 		}
+
+		.button_specific{
+			border-radius: 6px;
+			background: #D3D3D3;
+			width: auto;
+  			height: auto;
+			padding: 1px;
+			font-size: 10px;
+			border: 2px solid grey;
+		}
+
 		/* Popup container - can be anything you want */
 		.popup {
 			position: relative;

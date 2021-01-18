@@ -396,7 +396,7 @@ def synch_with_peers():
     synch = consensus()
 
     if not peers:
-        return "No Peers to synchronize with."
+        return "No peers to synchronize with."
 
     if synch[0]:
         return "Synchronisation succesful."
@@ -474,7 +474,7 @@ def add_fixed_block():
 def attack():
     
     if not peers:
-        return "No peers existing"
+        return json.dumps({"message":"No peers existing"})
     
     data = request.get_json()
     # data should contain the field attack which specifies which attack: A,B,C,D
@@ -505,9 +505,9 @@ def attack():
 
         response = announce_new_block(default_block)
         if response["status"]:
-            return "Default block was added."
+            return json.dumps({"message":"Default block was added."})
         else:
-            return "Something not working."
+            return json.dumps({"message":"Something not working."})
     else:
 
         tampered_block = default_block
@@ -518,7 +518,7 @@ def attack():
             # thus he is kind of "suggesting" an alternative blockchain
                 
             if last_block.index == 0:
-                return "Blockchain only has genesis block. No change of previous hash possible."
+                return json.dumps({"message":"Blockchain only has genesis block. No change of previous hash possible."})
             else:
                 block = blockchain.retrieve_block(last_block.index-1)
                 
@@ -552,11 +552,11 @@ def attack():
       
         if not response["status"]:
             # means that the block was not added
-            return (tampered_block, "Tampered block was identified: "+response["message"])
+            return json.dumps({"block":tampered_block.__dict__,"message":"Tampered block was identified: "+response["message"]})
         else:
             # because we actively sent a uncorrect block, but if this was accepted then something
             # of the proofing alogorithms is not working
-            return "Security mechanism is not working"
+            return json.dumps({"message":"Security mechanism is not working"})
 
 @app.route('/modify_difficulty', methods=['POST'])
 def modify_difficulty():
