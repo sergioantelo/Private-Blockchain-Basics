@@ -1,25 +1,40 @@
 from flask import Flask,render_template, redirect, request
 import requests
 import datetime
-import json
-import sys
-import time
 from hashlib import sha256
 import random
 import os
-
-##########
-#FELIX
-#####
-# Before package structre, with importing the app variable from the app folder, and calling app.run here, and having
-# the application code (view) in separate file. Probably there was a reason, but so far it works this way too and is maybe more intuitive
-###### 
+import sys
+import json
+import time
 
 
 app = Flask(__name__)
+# HARDCODED ADDRESS
 localhost = "http://127.0.0.1:"
+
+# LIST OF ALL NODES IN THE BLOCKCHAIN NODES
+'''
+Among these nodes the application will select one random node when requesting to mine the next block. Thus
+we kind of simulating which node is the first one that has mined the next block. 
+
+The relation between the application server and the blockchain nodes is similar to the situation of 
+full nodes and miners in reality. Even though each node in this simulation hold its own copy of the whole blockchain
+which would make it a full node, it gets the list of transactions which to mine from the application server.
+
+Other than this, this list is also needed if real concurrency should be implemented.
+'''
 NODE_ADDRESS_list = []
+
+# address of the node from which to fetch the blockchain for printing
 CONNECTED_NODE_ADDRESS = ""
+
+# list containing the currently submitted transactions, this list will be transmitted
+# to a node when requesting to mine
+pool_of_unmined_txs = []
+'''
+Some global variables needed for printing on the website.
+'''
 posts = []
 txs = []
 answer = ""
@@ -35,14 +50,11 @@ register = ""
 register_error = ""
 tamp_block = ""
 attack = ""
-  
-pool_of_unmined_txs = []
 
 
-def fetch_posts():
+def retrieve_blockchain():
     """
-    Function to fetch the chain from a blockchain node, parse the
-    data and store it locally.
+    From the node in CONNECTED_NODE_ADDRESS the function fetches the blockchain. 
     """
     get_chain_address = "{}/chain".format(CONNECTED_NODE_ADDRESS)
     response = requests.get(get_chain_address)
@@ -50,27 +62,26 @@ def fetch_posts():
         content = []
         chain = json.loads(response.content)
         for block in chain["chain"]:
-            #for tx in block["transactions"]:
-                #tx["index"] = block["index"]
-                #tx["hash"] = block["previous_hash"]
             content.append(block)
 
         global posts
         posts = sorted(content, key=lambda k: k['timestamp'],
                        reverse=True)
 
-def fetch_pending_txs():
+def get_pending_transactions():
     """
-    Function to fetch the chain from a blockchain node, parse the
-    data and store it locally.
+    Returns the list of submitted transactions since the last block was mined.
     """
     global txs
     txs = pool_of_unmined_txs
 
 @app.route('/')
 def index():
-    fetch_posts()
-    fetch_pending_txs()
+    '''
+    Function for maintaining the index.html page.
+    '''
+    retrieve_blockchain()
+    get_pending_transactions()
     return render_template('index.html',
                            title='LMU University: Decentralized Certificates Storage',
                            posts=posts,
@@ -95,11 +106,10 @@ def index():
 @app.route('/submit', methods=['POST'])
 def submit_textarea():
     """
-    Endpoint to create a new transaction via our application.
+    To create a new transaction via our application.
     """
     post_content = request.form["content"]
     author = request.form["author"]
-    # FELIX
     timestamp = time.time()
     
     tx_hash = sha256(post_content.encode()).hexdigest()
@@ -118,11 +128,15 @@ def submit_textarea():
 @app.route('/mine_app')
 def start_mining():
     """
-    Endpoint to simulate mining in network.
+    To simulate mining in network.
+
+    A random address from the list of known network nodes is chosen. To this node the application send
+    all the transaction currently stored in the list of pending transactions (pool_of_unmined_txs). 
+    Then it calls for this node the mine request.
     """
     select_rnd_node = random.choice(NODE_ADDRESS_list)
 
-    address = "{}/new_transaction".format(select_rnd_node)
+    address = "{}/add_transaction".format(select_rnd_node)
     global pool_of_unmined_txs
     for tx in pool_of_unmined_txs:
         requests.post(address,
@@ -140,7 +154,7 @@ def start_mining():
 @app.route('/search', methods=['POST'])
 def search_textarea():
     """
-    Endpoint to search for a transaction via our application.
+    To search for a transaction in the blockchain of a node via our application.
     """
     get_chain_address = "{}/chain".format(CONNECTED_NODE_ADDRESS)
     response = requests.get(get_chain_address)
@@ -170,6 +184,9 @@ def search_textarea():
 
 @app.route('/switch_node', methods=['POST'])
 def switch_connected_node():
+    '''
+    To change the node address from which to fetch the blockchain.
+    '''
     node = request.form["node"]
     node_address = localhost+node
 
@@ -178,7 +195,6 @@ def switch_connected_node():
     global connected_node_error
 
     if node_address not in NODE_ADDRESS_list:
-        print("Hello")
         connected_node = CONNECTED_NODE_ADDRESS
         connected_node_error = "Please input a valid node"
         return redirect('/')
@@ -201,6 +217,12 @@ def switch_connected_node():
 
 @app.route('/add_new_node', methods=['POST'])
 def add_node():
+    '''
+    Adding a node address to the list of node_addresses. This might be used when a new miner server was launched
+    after the application was launched. Then this new node in the network can be made known to the application. Thus
+    it will consider also this node for mining.
+    '''
+
     node = request.form["new_node"]
     node_address = localhost+node
 
@@ -220,6 +242,10 @@ def add_node():
 
 @app.route('/delete_node', methods=['POST'])
 def delete_node():
+    '''
+    Delete node from the list of blockchain network nodes. The respective server is still running, but
+    it won't be considered when selecting a node for mining.
+    '''
     node = request.form["del_node"]
     node_address = localhost+node
 
@@ -240,7 +266,7 @@ def delete_node():
 @app.route('/modify_diff', methods=['POST'])
 def modify_textarea():
     """
-    Endpoint to change the difficulty via our application.
+    To change the difficulty via our application.
     """
     diff = request.form["difficulty"]
 
@@ -265,6 +291,11 @@ def modify_textarea():
     
 @app.route('/reg_with', methods=['POST'])
 def reg_with():
+    '''
+    To register a base node, which is typically a new node coming to the network, with other nodes in the network.
+    If no peers but only a base node is given, then it will call for this node a synchronize function, where
+    the node is looking for the longest chain among its peers.
+    '''
     node_base = request.form["node1"]
     node_base_address = localhost+node_base
 
@@ -343,6 +374,9 @@ def reg_with():
 
 @app.route('/tampered_block', methods=['POST'])
 def tampered_block():
+    '''
+    Function to steer the attack simulation.
+    '''
     address = "{}/attack".format(CONNECTED_NODE_ADDRESS)
 
     # has to be fetched from the specified check boxes
@@ -369,17 +403,16 @@ def tampered_block():
 
 @app.route('/show_tampered_block')
 def show_tampered_block():
-    
+    '''
+    Function for displaying the tamerped block used in the attack.
+    '''
     global tamp_block
-    print(tamp_block)
     return tamp_block
 
 def timestamp_to_string(epoch_time):
     return datetime.datetime.fromtimestamp(epoch_time).strftime('%H:%M')
 
-##########
-# FELIX
-##########
+
 if __name__=="__main__":
     host_node = sys.argv[1]
     

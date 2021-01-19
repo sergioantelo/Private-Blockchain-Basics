@@ -26,7 +26,7 @@
 			</div>
 
 			<div class='blockchain'>
-				<center><h3>Pending Txs</h3></center>
+				<center><h3>Pending Transactions</h3></center>
 				{% for tx in txs %}
 				<div class="post_box">
 					<p>Author: {{tx.author}}</p>
@@ -39,7 +39,7 @@
 				{% for post in posts[::-1] %}
 				<div class="post_box">
 					<div class="post_box-header">
-						<div style="background: lightsalmon none repeat scroll 0% 0%; box-shadow: lightcoral 0px 0px 0px 2px;" class="post_box-avatar">{{post.index}}</div>
+						<div style="background: orange none repeat scroll 0% 0%; box-shadow: orange 0px 0px 0px 2px;" class="post_box-avatar">{{post.index}}</div>
 						<div class="name-header"><b>Block #{{post.index}}</b></div>
 						<div class="name-header"><b>Miner:</b> {{post.miner}}</div>
 						<div class="name-header"><b>Hash:</b> {{post.hash}}</div>
