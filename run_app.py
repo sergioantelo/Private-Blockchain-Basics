@@ -8,7 +8,6 @@ import sys
 import json
 import time
 
-
 app = Flask(__name__)
 # HARDCODED ADDRESS
 localhost = "http://127.0.0.1:"
@@ -50,7 +49,6 @@ register = ""
 register_error = ""
 tamp_block = ""
 attack = ""
-
 
 def retrieve_blockchain():
     """
@@ -101,7 +99,6 @@ def index():
                            attack = attack,
                            node_address=CONNECTED_NODE_ADDRESS,
                            readable_time=timestamp_to_string)
-
 
 @app.route('/submit', methods=['POST'])
 def submit_textarea():
@@ -337,7 +334,6 @@ def reg_with():
         register_error = ""
         return redirect('/')
 
-
     list_nodes = list_nodes.replace(" ","")
     modified_list = list_nodes.split(",")
     new_nodes = []
@@ -423,4 +419,3 @@ if __name__=="__main__":
     CONNECTED_NODE_ADDRESS = NODE_ADDRESS_list[0]
 
     app.run(debug=True,port=host_node)
-

@@ -6,7 +6,6 @@ import time
 from hashlib import sha256
 import sys
 
-
 class Block:
     def __init__(self, index, transactions, timestamp, previous_hash, nonce=0, miner=""):
         self.index = index
@@ -25,7 +24,6 @@ class Block:
         """
         block_string = json.dumps(self.__dict__, sort_keys=True)
         return sha256(block_string.encode()).hexdigest()
-
 
 class Blockchain:
 
@@ -81,8 +79,6 @@ class Blockchain:
         '''
         return self.chain[-1]
 
-   
-
     def retrieve_block(self, idx):
         '''
         Returns the block with the specified index from the blockchain.
@@ -96,7 +92,6 @@ class Blockchain:
         
         # NO block with specified index present
         return False
-
 
     def add_block(self, block, proof):
         """
@@ -153,7 +148,6 @@ class Blockchain:
 
         return True
 
-    
     def proof_of_work(self,block):
         """
         This function finds a "proof" for a provided block. It is altering the nonce field and computing the hash
@@ -169,7 +163,6 @@ class Blockchain:
 
         return computed_hash
 
-   
     def check_block_hash_correctness(self, block, block_hash):
         """
         This function takes a block and a hash and tests whether this hash is a valid proof. This means
@@ -186,7 +179,6 @@ class Blockchain:
             return (False, "Required difficulty not fullfilled")
         
         return (True, "Proof correct")
-
 
     def check_chain_validity(self, chain):
         '''
@@ -215,8 +207,6 @@ class Blockchain:
             block.hash, previous_hash = block_hash, block_hash
 
         return result
-
-    
 
 # start FLASK enviornment
 app = Flask(__name__)
@@ -253,7 +243,6 @@ def new_transaction():
 
     return "Success", 201
 
-
 @app.route('/mine', methods=['GET'])
 def mine_pending_transactions():
     '''
@@ -268,7 +257,6 @@ def mine_pending_transactions():
             submit_block_to_network(blockchain.get_last_block)
 
         return "Block #{} is mined.".format(blockchain.get_last_block.index)
-
 
 def submit_block_to_network(block):
     """
@@ -301,7 +289,6 @@ def submit_block_to_network(block):
     
     print(responses)
     return responses[0]
-
 
 @app.route('/add_block', methods=['POST'])
 def check_and_add_received_block():
@@ -409,7 +396,6 @@ def register_and_synch_with_existing_nodes():
     else:        
         return "Registration succesful. No longer chain found among peers"
 
-
 @app.route('/register_node', methods=['POST'])
 def add_new_peer_to_set():
     '''
@@ -425,7 +411,6 @@ def add_new_peer_to_set():
     peers.add(node_address)
 
     return "New node added", 200
-
 
 @app.route('/synchronize_with_peers')
 def synch_with_peers():
@@ -443,14 +428,12 @@ def synch_with_peers():
     else:
         return "No longer chain found among peers."
 
-
 @app.route('/pending_tx')
 def get_pending_tx():
     '''
     Returns all transactions which are in the current list of pending transaction.
     '''
     return json.dumps(blockchain.pending_transactions)
-
 
 @app.route('/chain', methods=['GET'])
 def get_chain():
@@ -467,9 +450,6 @@ def get_chain():
     return json.dumps({"length": len(chain_data),
                        "chain": chain_data,
                        "peers": list(peers)})
-
-
-
 
 @app.route('/attack', methods=['POST'])
 def attack():
@@ -580,7 +560,6 @@ def modify_difficulty():
     else:
         return "Difficulty unchanged."
 
-
 def reconstruct_chain(chain_data):
     '''
     Function which takes a Blockchain as a string in json format. From this the function creates
@@ -656,9 +635,6 @@ def consensus():
 
     return (False, peers_list_with_incorrect_chains)
 
-
 if __name__=="__main__":
     port = sys.argv[1]
     app.run(debug=True,port=port)
-    
-    
