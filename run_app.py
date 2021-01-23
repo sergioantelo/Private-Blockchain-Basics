@@ -26,7 +26,7 @@ Other than this, this list is also needed if real concurrency should be implemen
 NODE_ADDRESS_list = []
 
 # address of the node from which to fetch the blockchain for printing
-CONNECTED_NODE_ADDRESS = ""
+background_node_address = ""
 
 # list containing the currently submitted transactions, this list will be transmitted
 # to a node when requesting to mine
@@ -52,9 +52,9 @@ attack = ""
 
 def retrieve_blockchain():
     """
-    From the node in CONNECTED_NODE_ADDRESS the function fetches the blockchain. 
+    From the node in background_node_address the function fetches the blockchain. 
     """
-    get_chain_address = "{}/chain".format(CONNECTED_NODE_ADDRESS)
+    get_chain_address = "{}/chain".format(background_node_address)
     response = requests.get(get_chain_address)
     if response.status_code == 200:
         content = []
@@ -97,7 +97,7 @@ def index():
                            register_error = register_error,
                            tamp_block = tamp_block,
                            attack = attack,
-                           node_address=CONNECTED_NODE_ADDRESS,
+                           node_address=background_node_address,
                            readable_time=timestamp_to_string)
 
 @app.route('/submit', methods=['POST'])
@@ -153,7 +153,7 @@ def search_textarea():
     """
     To search for a transaction in the blockchain of a node via our application.
     """
-    get_chain_address = "{}/chain".format(CONNECTED_NODE_ADDRESS)
+    get_chain_address = "{}/chain".format(background_node_address)
     response = requests.get(get_chain_address)
     global answer
     global answer_error
@@ -187,12 +187,12 @@ def switch_connected_node():
     node = request.form["node"]
     node_address = localhost+node
 
-    global CONNECTED_NODE_ADDRESS
+    global background_node_address
     global connected_node
     global connected_node_error
 
     if node_address not in NODE_ADDRESS_list:
-        connected_node = CONNECTED_NODE_ADDRESS
+        connected_node = background_node_address
         connected_node_error = "Please input a valid node"
         return redirect('/')
     else:
@@ -200,7 +200,7 @@ def switch_connected_node():
             node = int(node)
             for node in NODE_ADDRESS_list:
                 if node_address == node:
-                    CONNECTED_NODE_ADDRESS = node_address
+                    background_node_address = node_address
                     connected_node = node_address
                     connected_node_error = ""
                     return redirect('/')
@@ -208,7 +208,7 @@ def switch_connected_node():
                     pass
             return redirect('/')
         except:
-            connected_node = CONNECTED_NODE_ADDRESS
+            connected_node = background_node_address
             connected_node_error = "Please input a valid node"
             return redirect('/')
 
@@ -373,7 +373,7 @@ def tampered_block():
     '''
     Function to steer the attack simulation.
     '''
-    address = "{}/attack".format(CONNECTED_NODE_ADDRESS)
+    address = "{}/attack".format(background_node_address)
 
     # has to be fetched from the specified check boxes
     attack_type = request.form["attack_type"]
@@ -416,6 +416,6 @@ if __name__=="__main__":
     for node in blockchain_nodes:
         NODE_ADDRESS_list.append(localhost+node)
 
-    CONNECTED_NODE_ADDRESS = NODE_ADDRESS_list[0]
+    background_node_address = NODE_ADDRESS_list[0]
 
     app.run(debug=True,port=host_node)

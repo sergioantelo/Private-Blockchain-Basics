@@ -111,15 +111,18 @@ class Blockchain:
         if previous_hash != block.previous_hash:
             return (False, "Previous hash not correct")
 
-        block_validity = self.check_block_hash_correctness(block,proof)
-        # block_validity is a tuple, where the first field specifies if the proof is correct
-        # and the second a message why the proof was not correct (in case)
-        if block_validity[0]:
-            block.hash = proof
-            self.chain.append(block)
+        
+        if not proof == block.compute_hash():
+            return (False, "Hash not correct")
 
-        return block_validity
+        if not proof.startswith('0' * self.difficulty):
+            return (False, "Required difficulty not fullfilled")
+        
+        block.hash = proof
+        self.chain.append(block)
 
+        return (True, "Proof correct")
+      
     def mine(self):
         """
         This function is the center function for mining a new block. It creates a new Block object
@@ -163,6 +166,7 @@ class Blockchain:
 
         return computed_hash
 
+    '''
     def check_block_hash_correctness(self, block, block_hash):
         """
         This function takes a block and a hash and tests whether this hash is a valid proof. This means
@@ -179,7 +183,9 @@ class Blockchain:
             return (False, "Required difficulty not fullfilled")
         
         return (True, "Proof correct")
+    '''
 
+    """
     def check_chain_validity(self, chain):
         '''
         Method which checks whether a whole chain (list of blocks) is valid, for each block:
@@ -207,6 +213,7 @@ class Blockchain:
             block.hash, previous_hash = block_hash, block_hash
 
         return result
+        """
 
 # start FLASK enviornment
 app = Flask(__name__)
@@ -469,7 +476,7 @@ def attack():
  
     global blockchain
     transaction = {
-        'author': 'Captain Hook',
+        'author': 'Peter Pan',
         'content': 'A simple default transaction.',
         'timestamp': time.time(),
         'hash': sha256('A simple default transaction.'.encode()).hexdigest()
