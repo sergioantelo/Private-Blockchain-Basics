@@ -7,7 +7,7 @@
 		<div class="left">
 			<div class="transaction">
 				<form action="/submit" id="textform" method="post">
-					<center><h3 style="color: darkolivegreen">Submit a Transaction</h3></center>
+					<center><h3 style="color: darkolivegreen">Submit Transaction</h3></center>
 					<center>
 					<label for="fcontent">Certificate content:</label><br>
 					<textarea id="fcontent" name="content" rows="2" cols="17"></textarea><br><br>
@@ -60,25 +60,6 @@
 		<div class="right">
 			<div class="row_right">
 				<div class="function">
-					<form action="/search" id="textform" method="post" class="form">
-						<center><h3 style="color: darkolivegreen">Search a Document</h3></center>
-
-						<label for="fcontent">Transaction:</label><br>
-						<center>
-							<input type="text" id="fcontent" name="content"><br>
-							<p style="color:red;font-size:10px">{{answer_error}}</p>
-						</center>
-			
-						<p>Output: {{answer}}</p>
-			
-						<center>
-							<input type="submit" value="Search" class="button_generic">
-						</center>
-						<br>
-					</form>
-				</div>
-			
-				<div class="function">
 					<form action="/switch_node" id="textform" method="post" class="form">
 						<center><h3 style="color: darkolivegreen">Switch Node</h3></center>
 						<label for="fnode">New node:</label><br>
@@ -93,6 +74,27 @@
 						<p>Connected node: {{connected_node}}</p>
 						<center>
 							<input type="submit" value="Switch" class="button_generic">
+						</center>
+						<br>
+					</form>
+				</div>
+				<div class="function">
+					<form action="/reg_with" id="textform" method="post" class="form">
+						<center><h3 style="color: darkolivegreen">Register Nodes</h3></center>
+						<label for="fnode1">Base node:</label><br>
+						<center>
+							<input type="text" id="fnode1" name="node1"><br>
+						</center>
+						<label for="flist_nodes">Register with node(s):</label><br>
+						<center>
+							<input type="text" id="flist_nodes" name="list_nodes"><br>
+							<p style="color:red;font-size:10px">{{register_error}}</p>
+						</center>
+
+						<p>Output: {{register}}</p>
+
+						<center>
+							<input type="submit" value="Register" class="button_generic">
 						</center>
 						<br>
 					</form>
@@ -127,6 +129,24 @@
 			</div>
 			<div class="row_right">
 				<div class="function">
+					<form action="/search" id="textform" method="post" class="form">
+						<center><h3 style="color: darkolivegreen">Search Transaction</h3></center>
+
+						<label for="fcontent">Transaction:</label><br>
+						<center>
+							<textarea id="fcontent" name="content" rows="1" cols="18"></textarea><br>
+							<p style="color:red;font-size:10px">{{answer_error}}</p>
+						</center>
+			
+						<p>Output: {{answer}}</p>
+			
+						<center>
+							<input type="submit" value="Search" class="button_generic">
+						</center>
+						<br>
+					</form>
+				</div>
+				<div class="function">
 					<form action="/modify_diff" id="textform" method="post" class="form">
 						<center><h3 style="color: darkolivegreen">Modify Difficulty</h3></center>
 
@@ -141,27 +161,6 @@
 						<center>						
 							<input type="submit" value="Change" class="button_generic">
 						</center>
-					</form>
-				</div>
-				<div class="function">
-					<form action="/reg_with" id="textform" method="post" class="form">
-						<center><h3 style="color: darkolivegreen">Register Nodes</h3></center>
-						<label for="fnode1">Base node:</label><br>
-						<center>
-							<input type="text" id="fnode1" name="node1"><br>
-						</center>
-						<label for="flist_nodes">Register with node(s):</label><br>
-						<center>
-							<input type="text" id="flist_nodes" name="list_nodes"><br>
-							<p style="color:red;font-size:10px">{{register_error}}</p>
-						</center>
-
-						<p>Output: {{register}}</p>
-
-						<center>
-							<input type="submit" value="Register" class="button_generic">
-						</center>
-						<br>
 					</form>
 				</div>
 				<div class="function">
