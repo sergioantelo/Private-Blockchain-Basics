@@ -419,6 +419,18 @@ def add_new_peer_to_set():
 
     return "New node added", 200
 
+@app.route('/unregister_node', methods=['POST'])
+def unregister_node():
+    node_address = request.get_json()["node_address"]
+    if not node_address:
+        return "Invalid data", 400
+    
+    if node_address in peers:
+        peers.discard(node_address)
+        return "Node "+node_address+" decoupled", 200
+    
+    return "Node "+node_address+" is not a peer", 201
+
 @app.route('/synchronize_with_peers')
 def synch_with_peers():
     '''

@@ -301,18 +301,18 @@ def reg_with():
     global register
     global register_error
 
-    # if no nodes to register with were submitted then the command is used to
-    # synchronize the specified node_base with its peers, which is looking for the longest chain
-    if not list_nodes:
-        address = "{}/synchronize_with_peers".format(node_base_address)
-        response = requests.get(address)
-        register = ""
-        register_error = response.text
-        return redirect('/')
-
-    elif node_base_address not in NODE_ADDRESS_list:
+    if node_base_address not in NODE_ADDRESS_list:
         register = ""
         register_error = "Please input an available node"
+        return redirect('/')
+    
+    # if no nodes to register with were submitted then the command is used to
+    # synchronize the specified node_base with its peers, which is looking for the longest chain
+    elif not list_nodes:
+        address = "{}/synchronize_with_peers".format(node_base_address)
+        response = requests.get(address)
+        register_error = ""
+        register = response.text
         return redirect('/')
 
     elif node_base_address == list_nodes_address:
